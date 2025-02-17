@@ -42,7 +42,7 @@ const UploadPage = () => {
 
   return (
     <div>
-      <h1 className="text-center">Upload E-Book</h1>
+      <h1 className="text-center">Upload E-Books</h1>
       <input type="file" accept=".pdf,.epub,.mp3" onChange={handleFileChange} />
 
       <p>File URL: {fileUrl ? "Loaded Successfully" : "Not Loaded"}</p>
