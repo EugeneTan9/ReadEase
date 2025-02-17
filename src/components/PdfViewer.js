@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import * as pdfjsLib from "pdfjs-dist/build/pdf";
+import TextToSpeech from "./TextToSpeech";
 
 // Set the worker source to load from the `public/` folder
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
@@ -51,6 +52,8 @@ const PdfViewer = ({ fileUrl }) => {
       <div className="text-center" style={{ whiteSpace: "pre-wrap", padding: "10px"}}>
         {textContent || "Loading text..."}
       </div>
+      {/* Render .TextToSpeech component only if there is text content */}
+      {textContent && <TextToSpeech text={textContent} />}
     </div>
   );
 };

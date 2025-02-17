@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import ePub from "epubjs";
+import TextToSpeech from "./TextToSpeech";
 
 const EpubViewer = ({ fileUrl }) => {
   const viewerRef = useRef(null);
   const bookInstanceRef = useRef(null); // Keeps track of book instance
   const [rendition, setRendition] = useState(null);
+  const [textContent, setTextContent] = useState(""); // A state to store extracted text content for text-to-speech 
 
   useEffect(() => {
     if (!fileUrl) return;
@@ -28,9 +30,26 @@ const EpubViewer = ({ fileUrl }) => {
       height: "600px",
     });
 
-    setRendition(renditionInstance);
-    renditionInstance.display(); // Show first page
+    // Extract text from the current page
+    const extractText = async () => {
+      const section = await renditionInstance.currentLocation();
+      if (section) {
+        const content = await renditionInstance.getContents();
+        const text = content[0].content.textContent;
+        setTextContent(text);
+      }
+    };
 
+    setRendition(renditionInstance);
+    renditionInstance.display().then(() => {
+      extractText(); // Text extraction when the first page loads
+    }); // Show first page
+
+    // Update text content when page changes
+    renditionInstance.on('relocated', (location) => {
+      extractText(); // Text extraction when the user navigates to a new page
+    });
+    
     console.log("✅ EPUB is fully loaded.");
 
     return () => {
@@ -50,6 +69,8 @@ const EpubViewer = ({ fileUrl }) => {
           <button onClick={() => rendition.next()}>Next ➡️</button>
         </>
       )}
+      {/* Render .TextToSpeech component only if there is text content */}
+      {textContent && <TextToSpeech text={textContent} />}
     </div>
   );
 };
