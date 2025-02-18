@@ -1,63 +1,101 @@
 import React, { useEffect, useRef, useState } from "react";
 import ePub from "epubjs";
 import TextToSpeech from "./TextToSpeech";
+import HighlightText from "./HighlightText";
 
 const EpubViewer = ({ fileUrl }) => {
   const viewerRef = useRef(null);
-  const bookInstanceRef = useRef(null); // Keeps track of book instance
+  const bookInstanceRef = useRef(null);
   const [rendition, setRendition] = useState(null);
-  const [textContent, setTextContent] = useState(""); // A state to store extracted text content for text-to-speech 
+  const [textContent, setTextContent] = useState("");
+  
+  // Create highlight text instance
+  const highlightText = HighlightText({ rendition });
 
   useEffect(() => {
-    if (!fileUrl) return;
+    let mounted = true;
 
-    console.log("📂 Received EPUB Blob URL:", fileUrl);
+    const initializeEpub = async () => {
+      if (!fileUrl) return;
 
-    // 🛑 Prevent double rendering: Check if book is already loaded
-    if (bookInstanceRef.current) {
-      console.log("🗑 Clearing previous EPUB content...");
-      bookInstanceRef.current.destroy();
-      bookInstanceRef.current = null;
-    }
+      // Clean up previous instance
+      if (bookInstanceRef.current) {
+        bookInstanceRef.current.destroy();
+        bookInstanceRef.current = null;
+      }
 
-    // Initialize a new book only if needed
-    const book = ePub(fileUrl);
-    bookInstanceRef.current = book; // Save the book instance
-    console.log("📖 EPUB Book Instance:", book);
+      try {
+        const book = ePub(fileUrl);
+        if (!mounted) {
+          book.destroy();
+          return;
+        }
 
-    const renditionInstance = book.renderTo(viewerRef.current, {
-      width: "100%",
-      height: "600px",
-    });
+        bookInstanceRef.current = book;
 
-    // Extract text from the current page
-    const extractText = async () => {
-      const section = await renditionInstance.currentLocation();
-      if (section) {
-        const content = await renditionInstance.getContents();
-        const text = content[0].content.textContent;
-        setTextContent(text);
+        const renditionInstance = book.renderTo(viewerRef.current, {
+          width: "100%",
+          height: "600px",
+        });
+
+        renditionInstance.themes.register("default", {
+          ".epub-word": {
+            "display": "inline",
+          },
+          ".highlight": {
+            "background-color": "#ffeb3b",
+            "border-radius": "3px",
+            padding: "0 2px"
+          }
+        });
+        renditionInstance.themes.select("default");
+
+        const processAndSetContent = async () => {
+          if (!mounted) return;
+          const newTextContent = highlightText.processContent(renditionInstance);
+          setTextContent(newTextContent);
+        };
+
+        if (mounted) {
+          setRendition(renditionInstance);
+          await renditionInstance.display();
+          await processAndSetContent();
+          renditionInstance.on('relocated', processAndSetContent);
+        }
+      } catch (error) {
+        console.error("Error initializing EPUB:", error);
       }
     };
 
-    setRendition(renditionInstance);
-    renditionInstance.display().then(() => {
-      extractText(); // Text extraction when the first page loads
-    }); // Show first page
+    initializeEpub();
 
-    // Update text content when page changes
-    renditionInstance.on('relocated', (location) => {
-      extractText(); // Text extraction when the user navigates to a new page
-    });
-    
-    console.log("✅ EPUB is fully loaded.");
-
+    // Cleanup function
     return () => {
-      console.log("🗑 Cleaning up EPUB instance...");
-      renditionInstance.destroy();
+      mounted = false;
+      if (bookInstanceRef.current) {
+        bookInstanceRef.current.destroy();
+        bookInstanceRef.current = null;
+      }
+      if (rendition) {
+        rendition.destroy();
+      }
       setRendition(null);
+      setTextContent("");
     };
   }, [fileUrl]);
+
+  // Clear memory when component unmounts
+  useEffect(() => {
+    return () => {
+      if (bookInstanceRef.current) {
+        bookInstanceRef.current.destroy();
+        bookInstanceRef.current = null;
+      }
+      if (rendition) {
+        rendition.destroy();
+      }
+    };
+  }, []);
 
   return (
     <div>
@@ -69,8 +107,12 @@ const EpubViewer = ({ fileUrl }) => {
           <button onClick={() => rendition.next()}>Next ➡️</button>
         </>
       )}
-      {/* Render .TextToSpeech component only if there is text content */}
-      {textContent && <TextToSpeech text={textContent} />}
+      {textContent && rendition && (
+        <TextToSpeech 
+          text={textContent}
+          onWordSpoken={highlightText.handleWordHighlight}
+        />
+      )}
     </div>
   );
 };

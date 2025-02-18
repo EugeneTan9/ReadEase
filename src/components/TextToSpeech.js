@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square } from 'lucide-react';
 
-const TextToSpeech = ({ text }) => {
+const TextToSpeech = ({ text, onWordSpoken }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [utterance, setUtterance] = useState(null);
@@ -38,12 +38,21 @@ const TextToSpeech = ({ text }) => {
       const newUtterance = new SpeechSynthesisUtterance(text);
       newUtterance.voice = voice;
       newUtterance.pitch = pitch;
-      newUtterance.rate = speed; // Changed from speed to rate
+      newUtterance.rate = speed;
       newUtterance.volume = volume;
+
+      // Handle word boundaries for highlighting
+      newUtterance.onboundary = (event) => {
+        if (event.name === 'word') {
+          const word = text.slice(event.charIndex, event.charIndex + event.charLength);
+          onWordSpoken(word, event.charIndex, event.charLength);
+        }
+      };
 
       newUtterance.onend = () => {
         setIsPlaying(false);
         setIsPaused(false);
+        onWordSpoken('', 0, 0); // Clear highlight
       };
 
       newUtterance.onpause = () => setIsPaused(true);
@@ -76,6 +85,7 @@ const TextToSpeech = ({ text }) => {
     synth.cancel();
     setIsPlaying(false);
     setIsPaused(false);
+    onWordSpoken('', 0, 0); // Clear highlight
   };
 
   const handleVoiceChange = (event) => {
@@ -90,7 +100,6 @@ const TextToSpeech = ({ text }) => {
       <div className="mb-4 d-flex gap-2">
         <button 
           onClick={togglePlayPause}
-        //   Custom size and background color
           style={{width: 200, height: 100, backgroundColor: '#0C090A'}}
           className="btn rounded text-white"
         >
@@ -99,7 +108,6 @@ const TextToSpeech = ({ text }) => {
         
         <button 
           onClick={handleStop}
-          //   Custom size and background color
           style={{width: 200, height: 100, backgroundColor: '#0C090A'}}
           className="btn rounded text-white"
         >
