@@ -3,7 +3,7 @@ import PdfViewer from "./PdfViewer";
 import EpubViewer from "./EpubViewer";
 import AudioPlayer from "./AudioPlayer";
 
-const UploadPage = () => {
+const UploadPage = ({ backgroundColor, textColor }) => {
   console.log("📂 UploadPage Rendered - Checking if fileUrl is causing re-mount"); // Debug log
 
   const [fileType, setFileType] = useState("");
