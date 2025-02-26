@@ -4,7 +4,7 @@ import "./styles.css";
 
 function App() {
   return (
-    <div>
+    <div className="app-container" style={{ maxWidth: "100vw", overflow: "hidden" }}>
       <UploadPage />
     </div>
   );

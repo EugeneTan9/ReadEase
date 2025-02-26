@@ -10,7 +10,6 @@ const PdfViewer = ({ fileUrl }) => {
   const [textContent, setTextContent] = useState("");
   const textContainerRef = useRef(null);
   const [rendition, setRendition] = useState(null);
-  const resizeObserverRef = useRef(null);
   const [isLoading, setIsLoading] = useState(true);
 
   // Create a simple rendition-like object for the PDF text container
@@ -155,12 +154,7 @@ const PdfViewer = ({ fileUrl }) => {
     setIsLoading(true);
     extractTextFromPdf(fileUrl);
 
-    // Cleanup
-    return () => {
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      }
-    };
+    // No need for resize observer - removing it to prevent resize loops
   }, [fileUrl]);
 
   const extractTextFromPdf = async (fileData) => {
@@ -250,34 +244,25 @@ const PdfViewer = ({ fileUrl }) => {
     `;
     document.head.appendChild(style);
 
-    // Create ResizeObserver for the text container
-    if (textContainerRef.current) {
-      resizeObserverRef.current = new ResizeObserver(() => {
-        // Handle resize if needed
-      });
-      resizeObserverRef.current.observe(textContainerRef.current);
-    }
-
     return () => {
       document.head.removeChild(style);
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect();
-      }
     };
   }, []);
 
   return (
-    <div>
+    <div className="container mx-auto" style={{ maxWidth: "800px" }}>
       <div 
         ref={textContainerRef}
         className="pdf-text-container" 
         style={{ 
           padding: "20px",
-          maxHeight: "600px",
+          height: "500px",
+          maxHeight: "500px",
           overflowY: "auto",
           backgroundColor: "#fff",
           border: "1px solid #ddd",
-          borderRadius: "4px"
+          borderRadius: "4px",
+          width: "100%"
         }}
       >
         {isLoading && "Loading text..."}
@@ -285,10 +270,12 @@ const PdfViewer = ({ fileUrl }) => {
       
       {/* Render TextToSpeech component only if there is text content */}
       {textContent && rendition && (
-        <TextToSpeech 
-          text={textContent} 
-          onWordSpoken={highlightText.handleWordHighlight}
-        />
+        <div style={{ maxWidth: "800px" }}>
+          <TextToSpeech 
+            text={textContent} 
+            onWordSpoken={highlightText.handleWordHighlight}
+          />
+        </div>
       )}
     </div>
   );

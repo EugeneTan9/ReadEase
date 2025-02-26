@@ -64,6 +64,12 @@ const HighlightText = ({ content, rendition }) => {
         const highlights = content.document.querySelectorAll('.highlight');
         highlights.forEach(h => h.classList.remove('highlight'));
       });
+      
+      // IMPORTANT FIX: Reset the lastHighlightedIndexRef when clearing highlights
+      // This ensures that when playback starts again, words will be highlighted from the beginning
+      lastHighlightedIndexRef.current = -1;
+      currentIndexRef.current = 0;
+      
       return;
     }
 

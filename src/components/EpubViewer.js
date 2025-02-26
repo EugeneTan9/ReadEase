@@ -35,7 +35,7 @@ const EpubViewer = ({ fileUrl }) => {
 
         const renditionInstance = book.renderTo(viewerRef.current, {
           width: "100%",
-          height: "600px",
+          height: "500px", // Fixed height instead of dynamic
         });
 
         renditionInstance.themes.register("default", {
@@ -98,14 +98,14 @@ const EpubViewer = ({ fileUrl }) => {
   }, []);
 
   return (
-    <div>
+    <div className="container mx-auto" style={{ maxWidth: "800px" }}>
       <h2>EPUB Viewer</h2>
-      <div ref={viewerRef} id="viewer"></div>
+      <div ref={viewerRef} id="viewer" style={{ width: "100%", maxWidth: "800px" }}></div>
       {rendition && (
-        <>
-          <button onClick={() => rendition.prev()}>⬅️ Previous</button>
+        <div style={{ marginTop: "10px", marginBottom: "10px" }}>
+          <button onClick={() => rendition.prev()} style={{ marginRight: "10px" }}>⬅️ Previous</button>
           <button onClick={() => rendition.next()}>Next ➡️</button>
-        </>
+        </div>
       )}
       {textContent && rendition && (
         <TextToSpeech 

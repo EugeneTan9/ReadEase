@@ -41,16 +41,32 @@ const UploadPage = () => {
   };
 
   return (
-    <div>
-      <h1 className="text-center">Upload E-Books</h1>
-      <input type="file" accept=".pdf,.epub,.mp3" onChange={handleFileChange} />
+    <div className="container mx-auto" style={{ maxWidth: "900px", padding: "20px" }}>
+      <h1 className="text-center mb-4">Upload E-Books</h1>
+      
+      <div className="mb-3 d-flex justify-content-center">
+        <div style={{ maxWidth: "500px", width: "100%" }}>
+          <input 
+            type="file" 
+            accept=".pdf,.epub,.mp3" 
+            onChange={handleFileChange} 
+            className="form-control"
+          />
+        </div>
+      </div>
 
-      <p>File URL: {fileUrl ? "Loaded Successfully" : "Not Loaded"}</p>
-      <p>File Type: {fileType}</p>
+      {fileUrl && (
+        <div className="text-center mb-4">
+          <p>File Status: Loaded Successfully</p>
+          <p>File Type: {fileType}</p>
+        </div>
+      )}
 
-      {fileType === "pdf" && <PdfViewer key={fileUrl} fileUrl={fileUrl} />}
-      {fileType === "epub" && <EpubViewer key={fileUrl} fileUrl={fileUrl} />}
-      {fileType === "audio" && <AudioPlayer key={fileUrl} fileUrl={fileUrl} />}
+      <div style={{ width: "100%", maxWidth: "900px", margin: "0 auto" }}>
+        {fileType === "pdf" && <PdfViewer key={fileUrl} fileUrl={fileUrl} />}
+        {fileType === "epub" && <EpubViewer key={fileUrl} fileUrl={fileUrl} />}
+        {fileType === "audio" && <AudioPlayer key={fileUrl} fileUrl={fileUrl} />}
+      </div>
     </div>
   );
 };
