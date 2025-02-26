@@ -3,6 +3,31 @@ import * as pdfjsLib from "pdfjs-dist/build/pdf";
 import TextToSpeech from "./TextToSpeech";
 import HighlightText from "./HighlightText";
 
+// Disable any resize observers in PDF.js
+if (typeof window !== 'undefined' && window.ResizeObserver) {
+  const originalResizeObserver = window.ResizeObserver;
+  window.ResizeObserver = class MockResizeObserver {
+    constructor(callback) {
+      this._callback = callback;
+      this._elements = [];
+    }
+    observe(element) {
+      if (this._elements.indexOf(element) === -1) {
+        this._elements.push(element);
+      }
+    }
+    unobserve(element) {
+      const index = this._elements.indexOf(element);
+      if (index !== -1) {
+        this._elements.splice(index, 1);
+      }
+    }
+    disconnect() {
+      this._elements = [];
+    }
+  };
+}
+
 // Set the worker source to load from the `public/` folder
 pdfjsLib.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.js`;
 
