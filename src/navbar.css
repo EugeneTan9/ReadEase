@@ -1,0 +1,16 @@
+.dynamic-navbar {
+    min-height: 10vh; /* Set a minimum height of 10% of the viewport height */
+    height: auto; /* Let it expand based on content */
+    display: flex;
+    align-items: center; /* Centers content vertically */
+    background-color: #0C090A; /* Ensure background color is retained */
+  }
+  
+  .navbar-container {
+    width: 10%;
+    display: flex;
+    justify-content: space-between; /* Space out the logo and nav items */
+    align-items: center;
+    padding: 1rem; /* Add padding for better spacing */
+  }
+  
