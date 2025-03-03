@@ -48,7 +48,7 @@ const PdfViewer = ({ fileUrl }) => {
 
   return (
     <div>
-      <div className="text-center" style={{ whiteSpace: "pre-wrap", padding: "10px"}}>
+      <div className="text-center" id="bookContent" style={{ whiteSpace: "pre-wrap", padding: "10px"}}>
         {textContent || "Loading text..."}
       </div>
     </div>
