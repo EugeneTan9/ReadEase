@@ -1,14 +1,29 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Form, Button } from "react-bootstrap";
 
+/**
+ * FeedBackForm Component
+ * 
+ * A simple feedback form that allows users to submit their name, email, and feedback.
+ * The form data is sent to a backend API for processing.
+ */
 const FeedBackForm = () => {
+  // State to store form input values
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     feedback: "",
   });
+
+  // State to store the message indicating success or failure of form submission
   const [message, setMessage] = useState("");
 
+  /**
+   * Handles input field changes and updates the form state.
+   * Uses computed property names to dynamically update the corresponding field.
+   * 
+   * @param {Object} e - Event object from input change
+   */
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -16,6 +31,13 @@ const FeedBackForm = () => {
     });
   };
 
+  /**
+   * Handles form submission.
+   * Sends a POST request to the backend with form data.
+   * Displays a success message on successful submission or an error message if the request fails.
+   * 
+   * @param {Object} e - Event object from form submission
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -30,6 +52,8 @@ const FeedBackForm = () => {
       const data = await response.json();
       if (data.success) {
         setMessage("Feedback submitted successfully!");
+        
+        // Reset form fields after successful submission
         setFormData({ name: "", email: "", feedback: "" });
       }
     } catch (error) {
@@ -41,14 +65,19 @@ const FeedBackForm = () => {
   return (
     <Container className="d-flex justify-content-center align-items-center vh-100">
       <Row>
-        <Col  className="shadow p-6 rounded">
+        <Col className="mb-4 shadow p-6 rounded">
           <h2 className="text-center fw-bold mb-4">Feedback Form</h2>
+
+          {/* Display success or error message */}
           {message && (
             <div className="mb-4 p-2 bg-success text-white rounded">
               {message}
             </div>
           )}
+
+          {/* Feedback form */}
           <Form onSubmit={handleSubmit}>
+            {/* Name input field */}
             <Form.Group className="mb-4">
               <Form.Label className="fw-bold">Name:</Form.Label>
               <Form.Control
@@ -60,6 +89,7 @@ const FeedBackForm = () => {
               />
             </Form.Group>
 
+            {/* Email input field */}
             <Form.Group className="mb-3">
               <Form.Label className="fw-bold">Email:</Form.Label>
               <Form.Control
@@ -71,6 +101,7 @@ const FeedBackForm = () => {
               />
             </Form.Group>
 
+            {/* Feedback textarea field */}
             <Form.Group className="mb-3">
               <Form.Label className="fw-bold">Feedback:</Form.Label>
               <Form.Control
@@ -83,61 +114,14 @@ const FeedBackForm = () => {
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit" className="w-100">
+            {/* Submit button */}
+            <Button variant="primary" type="submit" className="w-100 mb-2">
               Submit Feedback
             </Button>
           </Form>
         </Col>
       </Row>
     </Container>
-    // <div>
-    //   <h2 className="text-2xl font-bold mb-4">Feedback Form</h2>
-    //   {message && (
-    //     <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-    //       {message}
-    //     </div>
-    //   )}
-    //   <form onSubmit={handleSubmit}>
-    //     <Form.Group className="mb-4">
-    //       <Form.Label className="fw-bold">Name:</Form.Label>
-    //       <Form.Control
-    //         type="text"
-    //         name="name"
-    //         value={formData.name}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </Form.Group>
-
-    //     <Form.Group className="mb-4" >
-    //       <Form.Label className="fw-bold">Email:</Form.Label>
-    //       <Form.Control
-    //         type="email"
-    //         name="email"
-    //         value={formData.email}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </Form.Group>
-
-    //     <Form.Group className="mb-4" >
-    //       <Form.Label className="fw-bold">Feedback:</Form.Label>
-    //       <Form.Control
-    //         type="text"
-    //         name="feedback"
-    //         value={formData.feedback}
-    //         onChange={handleChange}
-    //         required
-    //       />
-    //     </Form.Group>
-    //     <button
-    //       type="submit"
-    //       className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-    //     >
-    //       Submit Feedback
-    //     </button>
-    //   </form>
-    // </div>
   );
 };
 

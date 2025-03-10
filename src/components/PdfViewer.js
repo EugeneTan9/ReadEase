@@ -36,6 +36,8 @@ const PdfViewer = ({ fileUrl }) => {
   const textContainerRef = useRef(null);
   const [rendition, setRendition] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentBgColor, setCurrentBgColor] = useState("");
+  const [currentTextColor, setCurrentTextColor] = useState("");
 
   // Create a simple rendition-like object for the PDF text container
   const createPdfRendition = () => ({
@@ -46,6 +48,32 @@ const PdfViewer = ({ fileUrl }) => {
 
   // Initialize highlighting functionality
   const highlightText = HighlightText({ rendition });
+
+  // Apply current theme colors to PDF viewer
+  const updatePdfColors = () => {
+    if (!textContainerRef.current) return;
+    
+    // Get current body colors
+    const bodyStyle = getComputedStyle(document.body);
+    const bgColor = bodyStyle.backgroundColor;
+    const textColor = bodyStyle.color;
+    
+    // Only update if colors have changed
+    if (bgColor !== currentBgColor || textColor !== currentTextColor) {
+      setCurrentBgColor(bgColor);
+      setCurrentTextColor(textColor);
+      
+      // Apply to container
+      textContainerRef.current.style.backgroundColor = bgColor;
+      textContainerRef.current.style.color = textColor;
+      
+      // Apply to all text elements
+      const textElements = textContainerRef.current.querySelectorAll('.pdf-line, .pdf-page-header');
+      textElements.forEach(element => {
+        element.style.color = textColor;
+      });
+    }
+  };
 
   // Process all pages of text content to create structured DOM
   const processTextContent = (pagesContent) => {
@@ -125,6 +153,9 @@ const PdfViewer = ({ fileUrl }) => {
       // Add this page's content to the main container
       textContainerRef.current.appendChild(pageContainer);
     });
+    
+    // Apply current theme colors
+    updatePdfColors();
 
     return fullText;
   };
@@ -175,25 +206,40 @@ const PdfViewer = ({ fileUrl }) => {
       return;
     }
     
-    console.log("Received file URL in PdfViewer:", fileUrl);
     setIsLoading(true);
     extractTextFromPdf(fileUrl);
-
-    // No need for resize observer - removing it to prevent resize loops
   }, [fileUrl]);
+
+  // Monitor for color theme changes
+  useEffect(() => {
+    // Get initial colors
+    const bodyStyle = getComputedStyle(document.body);
+    setCurrentBgColor(bodyStyle.backgroundColor);
+    setCurrentTextColor(bodyStyle.color);
+    
+    // Create observer to watch for style changes on body
+    const observer = new MutationObserver(() => {
+      updatePdfColors();
+    });
+    
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+    
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const extractTextFromPdf = async (fileData) => {
     try {
-      console.log("Extracting text from PDF:", fileData);
       if (!fileData) return;
 
       // Convert ArrayBuffer to Uint8Array
       const pdfData = new Uint8Array(fileData.slice(0));
       const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-      console.log("Loading task created:", loadingTask);
-
       const pdf = await loadingTask.promise;
-      console.log("PDF loaded successfully, pages:", pdf.numPages);
       
       // Array to hold the content of each page
       const pagesContent = [];
@@ -201,7 +247,6 @@ const PdfViewer = ({ fileUrl }) => {
 
       // Process pages SEQUENTIALLY to maintain order
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        console.log(`Processing page ${pageNum}...`);
         const page = await pdf.getPage(pageNum);
         const textContent = await page.getTextContent();
         
@@ -232,6 +277,9 @@ const PdfViewer = ({ fileUrl }) => {
         const newRendition = createPdfRendition();
         setRendition(newRendition);
         setIsLoading(false);
+        
+        // Apply colors
+        updatePdfColors();
       });
     } catch (error) {
       console.error("Error extracting text from PDF:", error);
@@ -262,9 +310,10 @@ const PdfViewer = ({ fileUrl }) => {
         display: inline;
       }
       .highlight {
-        background-color: #ffeb3b;
+        background-color: #ffeb3b !important;
         border-radius: 3px;
         padding: 0 2px;
+        color: #000 !important;
       }
     `;
     document.head.appendChild(style);
@@ -284,7 +333,8 @@ const PdfViewer = ({ fileUrl }) => {
           height: "500px",
           maxHeight: "500px",
           overflowY: "auto",
-          backgroundColor: "#fff",
+          backgroundColor: "inherit",
+          color: "inherit",
           border: "1px solid #ddd",
           borderRadius: "4px",
           width: "100%"

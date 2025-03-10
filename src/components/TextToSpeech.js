@@ -1,6 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Square } from 'lucide-react';
 
+/**
+ * TextToSpeech Component
+ * 
+ * This component utilizes the Web Speech API to convert text to speech, allowing 
+ * users to control playback, adjust voice settings, and track spoken words.
+ * 
+ * @param {string} text - The text to be converted into speech.
+ * @param {Function} onWordSpoken - Callback function triggered when a word is spoken.
+ */
 const TextToSpeech = ({ text, onWordSpoken }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -11,20 +20,22 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
   const [volume, setVolume] = useState(1);
 
   useEffect(() => {
-    // Initialize speech synthesis and get available voices
+    // Initialize speech synthesis and retrieve available voices
     const synth = window.speechSynthesis;
     const updateVoices = () => {
       const voices = synth.getVoices();
-      setVoice(voices[0]); // Set default voice
+      if (voices.length > 0) {
+        setVoice(voices[0]); // Set the first available voice as default
+      }
     };
 
-    // Chrome loads voices asynchronously
+    // Handle asynchronous voice loading in Chrome
     if (speechSynthesis.onvoiceschanged !== undefined) {
       speechSynthesis.onvoiceschanged = updateVoices;
     }
     updateVoices();
 
-    // Cleanup
+    // Cleanup function to stop any ongoing speech on component unmount
     return () => {
       if (utterance) {
         synth.cancel();
@@ -33,7 +44,7 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
   }, []);
 
   useEffect(() => {
-    // Create new utterance when text changes
+    // Create a new SpeechSynthesisUtterance instance whenever text or settings change
     if (text) {
       const newUtterance = new SpeechSynthesisUtterance(text);
       newUtterance.voice = voice;
@@ -41,7 +52,7 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
       newUtterance.rate = speed;
       newUtterance.volume = volume;
 
-      // Handle word boundaries for highlighting
+      // Trigger callback for highlighting words as they are spoken
       newUtterance.onboundary = (event) => {
         if (event.name === 'word') {
           const word = text.slice(event.charIndex, event.charIndex + event.charLength);
@@ -49,12 +60,14 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
         }
       };
 
+      // Reset playback states when speech ends
       newUtterance.onend = () => {
         setIsPlaying(false);
         setIsPaused(false);
-        onWordSpoken('', 0, 0); // Clear highlight
+        onWordSpoken('', 0, 0); // Clear word highlight
       };
 
+      // Update playback states based on speech synthesis events
       newUtterance.onpause = () => setIsPaused(true);
       newUtterance.onresume = () => setIsPaused(false);
       newUtterance.onstart = () => setIsPlaying(true);
@@ -63,6 +76,9 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
     }
   }, [text, voice, pitch, speed, volume]);
 
+  /**
+   * Handles play, pause, and resume functionality for text-to-speech.
+   */
   const togglePlayPause = () => {
     const synth = window.speechSynthesis;
 
@@ -75,28 +91,35 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
       setIsPaused(false);
       setIsPlaying(true);
     } else {
-      synth.cancel(); // Cancel any ongoing speech
+      synth.cancel(); // Ensure no overlapping speech instances
       synth.speak(utterance);
     }
   };
 
+  /**
+   * Stops speech playback and resets relevant states.
+   */
   const handleStop = () => {
     const synth = window.speechSynthesis;
     synth.cancel();
     setIsPlaying(false);
     setIsPaused(false);
-    onWordSpoken('', 0, 0); // Clear highlight
+    onWordSpoken('', 0, 0); // Clear word highlight
   };
 
+  /**
+   * Updates the selected voice for speech synthesis.
+   */
   const handleVoiceChange = (event) => {
     const voices = window.speechSynthesis.getVoices();
     setVoice(voices[event.target.value]);
   };
 
   return (
-    <div className="card p-4">
+    <div className="border p-4">
       <h3 className="mb-4">Text to Speech Controls</h3>
       
+      {/* Playback Controls */}
       <div className="mb-4 d-flex gap-2">
         <button 
           onClick={togglePlayPause}
@@ -115,12 +138,10 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
         </button>
       </div>
 
+      {/* Voice Selection Dropdown */}
       <div className="mb-4">
         <label className="d-block mb-2">Voice:</label>
-        <select 
-          onChange={handleVoiceChange}
-          className="form-select"
-        >
+        <select onChange={handleVoiceChange} className="form-select">
           {window.speechSynthesis.getVoices().map((voice, index) => (
             <option key={voice.name} value={index}>
               {voice.name}
@@ -129,6 +150,7 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
         </select>
       </div>
 
+      {/* Speech Speed Control */}
       <div className="mb-4">
         <label className="d-block mb-2">Speed: {speed}</label>
         <input 
@@ -142,6 +164,7 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
         />
       </div>
 
+      {/* Speech Pitch Control */}
       <div className="mb-4">
         <label className="d-block mb-2">Pitch: {pitch}</label>
         <input 
@@ -155,6 +178,7 @@ const TextToSpeech = ({ text, onWordSpoken }) => {
         />
       </div>
 
+      {/* Speech Volume Control */}
       <div className="mb-4">
         <label className="d-block mb-2">Volume: {volume}</label>
         <input 

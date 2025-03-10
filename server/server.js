@@ -1,26 +1,40 @@
-const express = require('express');
-const cors = require('cors');
-const db = require('./database');
+// Import required modules
+const express = require('express'); // Express framework for handling HTTP requests
+const cors = require('cors'); // Middleware to enable Cross-Origin Resource Sharing (CORS)
+const db = require('./database'); // Import the SQLite database instance
 
-const app = express();
-const port = 5000;
+const app = express(); // Initialize an Express application
+const port = 5000; // Define the server port
 
-app.use(cors());
-app.use(express.json());
+// Middleware setup
+app.use(cors()); // Enable CORS to allow cross-origin requests
+app.use(express.json()); // Enable parsing of JSON request bodies
 
-// Endpoint to submit feedback
+/**
+ * Endpoint to submit user feedback.
+ * Accepts a JSON request body with `name`, `email`, and `feedback` fields.
+ */
 app.post('/api/feedback', (req, res) => {
     const { name, email, feedback } = req.body;
-    
+
+    // Validate request body to ensure required fields are present
+    if (!name || !email || !feedback) {
+        return res.status(400).json({ error: 'All fields (name, email, feedback) are required' });
+    }
+
+    // Insert feedback into the database using parameterized query to prevent SQL injection
     db.run(
         'INSERT INTO user_feedback (name, email, feedback) VALUES (?, ?, ?)',
         [name, email, feedback],
         function(err) {
             if (err) {
-                res.status(500).json({ error: err.message });
-                return;
+                // Return a 500 error response if database insertion fails
+                return res.status(500).json({ error: err.message });
             }
-            console.log("SUCCESS")
+
+            console.log('Feedback successfully submitted'); // Log successful submission
+
+            // Return success response with the newly created feedback ID
             res.json({
                 success: true,
                 id: this.lastID
@@ -29,6 +43,7 @@ app.post('/api/feedback', (req, res) => {
     );
 });
 
+// Start the Express server and listen on the specified port
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });

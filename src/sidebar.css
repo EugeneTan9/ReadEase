@@ -1,9 +1,8 @@
-/* Sidebar Styling */
 .sidebar {
     position: fixed;
     top: 0;
-    left: -250px; /* Hidden initially */
-    width: 250px;
+    left: -25%; /* Hidden initially */
+    width: 25%;
     height: 100%;
     background: #333;
     color: white;
